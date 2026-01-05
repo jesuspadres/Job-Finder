@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Hunt Dashboard</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #141414;
+            --bg-card: #1a1a1a;
+            --bg-hover: #222;
+            --border: #2a2a2a;
+            --border-hover: #3a3a3a;
+            --text-primary: #e5e5e5;
+            --text-secondary: #888;
+            --text-muted: #555;
+            --accent: #00ff88;
+            --accent-dim: #00cc6a;
+            --danger: #ff4444;
+            --warning: #ffaa00;
+            --info: #4488ff;
+            --applied: #8844ff;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-secondary); }
+        ::-webkit-scrollbar-thumb { background: var(--border-hover); border-radius: 4px; }
+
+        .app { max-width: 1600px; margin: 0 auto; padding: 24px; }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .header h1 {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -1px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header h1 span { color: var(--accent); }
+        .header-actions { display: flex; gap: 12px; }
+
+        .btn {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 10px 18px;
+            border: 2px solid var(--border);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn:hover { border-color: var(--accent); color: var(--accent); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .btn-primary {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: var(--bg-primary);
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-dim);
+            border-color: var(--accent-dim);
+            color: var(--bg-primary);
+        }
+
+        /* Settings Panel */
+        .settings-panel {
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 20px;
+            background: var(--bg-secondary);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .settings-header:hover { background: var(--bg-hover); }
+
+        .settings-header h3 {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .settings-header .toggle-icon {
+            font-size: 14px;
+            transition: transform 0.2s;
+        }
+
+        .settings-header .toggle-icon.open { transform: rotate(180deg); }
+
+        .settings-body { padding: 20px; display: none; }
+        .settings-body.open { display: block; }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .setting-group { display: flex; flex-direction: column; gap: 8px; }
+
+        .setting-group label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+        }
+
+        .setting-group input,
+        .setting-group textarea {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            padding: 10px 14px;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border);
+            color: var(--text-primary);
+            transition: border-color 0.15s;
+        }
+
+        .setting-group input:focus,
+        .setting-group textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .setting-group textarea {
+            min-height: 80px;
+            resize: vertical;
+            font-size: 12px;
+        }
+
+        .setting-group input[type="number"] { width: 120px; }
+        .setting-row { display: flex; gap: 20px; flex-wrap: wrap; }
+
+        .setting-hint {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .settings-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        /* Stats Bar */
+        .stats-bar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            padding: 12px 20px;
+            min-width: 120px;
+        }
+
+        .stat-card .label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            margin-bottom: 2px;
+        }
+
+        .stat-card .value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .stat-card.secondary .value { color: var(--text-primary); }
+
+        /* Filters */
+        .filters {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-box { flex: 1; min-width: 250px; position: relative; }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 14px 10px 40px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 14px;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border);
+            color: var(--text-primary);
+            transition: border-color 0.15s;
+        }
+
+        .search-box input:focus { outline: none; border-color: var(--accent); }
+
+        .search-box::before {
+            content: "⌕";
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 16px;
+            color: var(--text-secondary);
+        }
+
+        .filter-group { display: flex; gap: 6px; }
+
+        .filter-btn {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            padding: 8px 14px;
+            border: 2px solid var(--border);
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.15s;
+            text-transform: uppercase;
+        }
+
+        .filter-btn:hover { border-color: var(--border-hover); color: var(--text-primary); }
+
+        .filter-btn.active {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(0, 255, 136, 0.1);
+        }
+
+        /* Table */
+        .table-container {
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            overflow-x: auto;
+        }
+
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+
+        th {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: left;
+            padding: 14px 16px;
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            border-bottom: 2px solid var(--border);
+            white-space: nowrap;
+            user-select: none;
+        }
+
+        th.sortable { cursor: pointer; transition: all 0.15s; }
+        th.sortable:hover { color: var(--text-primary); background: var(--bg-hover); }
+        th.sortable.active { color: var(--accent); }
+        th .sort-icon { margin-left: 6px; opacity: 0.3; }
+        th.sortable:hover .sort-icon { opacity: 0.6; }
+        th.sortable.active .sort-icon { opacity: 1; }
+
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+        }
+
+        tr:hover td { background: rgba(255, 255, 255, 0.02); }
+        tr.checked td { opacity: 0.5; }
+        tr.checked .job-title { text-decoration: line-through; }
+
+        .checkbox-cell { width: 44px; text-align: center; }
+
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            background: var(--bg-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+        }
+
+        .checkbox:hover { border-color: var(--accent); }
+        .checkbox.checked { background: var(--accent); border-color: var(--accent); }
+        .checkbox.checked::after { content: "✓"; color: var(--bg-primary); font-weight: 700; font-size: 12px; }
+
+        .job-title { font-weight: 600; color: var(--text-primary); margin-bottom: 3px; }
+        .job-company { color: var(--accent); font-weight: 500; }
+        .job-location { color: var(--text-secondary); font-size: 12px; }
+        .job-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+
+        .tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9px;
+            padding: 2px 6px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        .tag.remote { border-color: var(--info); color: var(--info); }
+        .tag.site-linkedin { border-color: #0077b5; color: #0077b5; }
+        .tag.site-indeed { border-color: #2164f3; color: #2164f3; }
+        .tag.site-glassdoor { border-color: #0caa41; color: #0caa41; }
+        .tag.site-zip_recruiter { border-color: #5ba829; color: #5ba829; }
+
+        .salary { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--accent); white-space: nowrap; }
+        .date { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-secondary); white-space: nowrap; }
+
+        .status-select {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            padding: 5px 8px;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border);
+            color: var(--text-primary);
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        .status-select:focus { outline: none; border-color: var(--accent); }
+        .status-select.status-new { border-color: var(--text-muted); }
+        .status-select.status-interested { border-color: var(--warning); color: var(--warning); }
+        .status-select.status-applied { border-color: var(--applied); color: var(--applied); }
+        .status-select.status-rejected { border-color: var(--danger); color: var(--danger); }
+        .status-select.status-interview { border-color: var(--accent); color: var(--accent); }
+
+        .applied-date {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9px;
+            color: var(--applied);
+            margin-top: 4px;
+            opacity: 0.8;
+        }
+
+        .actions { display: flex; gap: 6px; }
+
+        .action-btn {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            padding: 5px 10px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.15s;
+            text-decoration: none;
+        }
+
+        .action-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .action-btn.apply { border-color: var(--accent); color: var(--accent); }
+        .action-btn.apply:hover { background: var(--accent); color: var(--bg-primary); }
+        .action-btn.delete:hover { border-color: var(--danger); color: var(--danger); }
+
+        .loading { text-align: center; padding: 60px; color: var(--text-secondary); }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 36px;
+            height: 36px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 12px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .empty-state { text-align: center; padding: 60px 40px; color: var(--text-secondary); }
+        .empty-state h3 { font-size: 16px; margin-bottom: 8px; color: var(--text-primary); }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 14px 20px;
+            background: var(--bg-card);
+            border: 2px solid var(--accent);
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+
+        .toast.error { border-color: var(--danger); }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .results-count {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-secondary);
+        }
+
+        @media (max-width: 768px) {
+            .header { flex-direction: column; gap: 16px; align-items: flex-start; }
+            .stats-bar { display: grid; grid-template-columns: repeat(2, 1fr); }
+            .filters { flex-direction: column; }
+            .search-box { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useCallback, useMemo } = React;
+
+        const API_BASE = 'http://localhost:8000/api';
+
+        const DEFAULT_CONFIG = {
+            searchQuery: '"software engineer" OR "software developer" OR "qa engineer" OR "quality assurance engineer" OR "test engineer" OR "software test engineer" OR "Software Development Engineer"',
+            location: 'USA',
+            resultsWanted: 100,
+            hoursOld: 72,
+            excludeKeywords: 'senior, sr., sr, lead, principal, staff, manager, architect, head, director'
+        };
+
+        function App() {
+            const [jobs, setJobs] = useState([]);
+            const [stats, setStats] = useState(null);
+            const [loading, setLoading] = useState(true);
+            const [scraping, setScraping] = useState(false);
+            const [search, setSearch] = useState('');
+            const [statusFilter, setStatusFilter] = useState('all');
+            const [toast, setToast] = useState(null);
+            const [settingsOpen, setSettingsOpen] = useState(false);
+            const [config, setConfig] = useState(() => {
+                const saved = localStorage.getItem('jobDashboardConfig');
+                return saved ? JSON.parse(saved) : DEFAULT_CONFIG;
+            });
+            const [sortColumn, setSortColumn] = useState('date_posted');
+            const [sortDirection, setSortDirection] = useState('desc');
+
+            useEffect(() => {
+                localStorage.setItem('jobDashboardConfig', JSON.stringify(config));
+            }, [config]);
+
+            const showToast = (message, isError = false) => {
+                setToast({ message, isError });
+                setTimeout(() => setToast(null), 3000);
+            };
+
+            const fetchJobs = useCallback(async () => {
+                try {
+                    const params = new URLSearchParams();
+                    if (statusFilter !== 'all') params.append('status', statusFilter);
+                    if (search) params.append('search', search);
+                    const res = await fetch(`${API_BASE}/jobs?${params}`);
+                    const data = await res.json();
+                    setJobs(data.jobs);
+                } catch (err) {
+                    showToast('Failed to fetch jobs', true);
+                }
+            }, [statusFilter, search]);
+
+            const fetchStats = async () => {
+                try {
+                    const res = await fetch(`${API_BASE}/stats`);
+                    setStats(await res.json());
+                } catch (err) {}
+            };
+
+            useEffect(() => {
+                setLoading(true);
+                Promise.all([fetchJobs(), fetchStats()]).finally(() => setLoading(false));
+            }, [fetchJobs]);
+
+            const sortedJobs = useMemo(() => {
+                return [...jobs].sort((a, b) => {
+                    let aVal = a[sortColumn];
+                    let bVal = b[sortColumn];
+                    
+                    if (aVal === null || aVal === undefined) aVal = '';
+                    if (bVal === null || bVal === undefined) bVal = '';
+                    
+                    if (sortColumn === 'salary') {
+                        aVal = a.salary_min || 0;
+                        bVal = b.salary_min || 0;
+                    }
+                    
+                    if (sortColumn === 'date_posted' || sortColumn === 'applied_at') {
+                        aVal = aVal ? new Date(aVal).getTime() : 0;
+                        bVal = bVal ? new Date(bVal).getTime() : 0;
+                    }
+                    
+                    if (typeof aVal === 'string') {
+                        aVal = aVal.toLowerCase();
+                        bVal = bVal.toLowerCase();
+                    }
+                    
+                    if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+                    if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+                    return 0;
+                });
+            }, [jobs, sortColumn, sortDirection]);
+
+            const handleSort = (column) => {
+                if (sortColumn === column) {
+                    setSortDirection(d => d === 'asc' ? 'desc' : 'asc');
+                } else {
+                    setSortColumn(column);
+                    setSortDirection('desc');
+                }
+            };
+
+            const handleScrape = async () => {
+                setScraping(true);
+                try {
+                    const res = await fetch(`${API_BASE}/scrape`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            search_query: config.searchQuery,
+                            location: config.location,
+                            results_wanted: parseInt(config.resultsWanted),
+                            hours_old: parseInt(config.hoursOld),
+                            exclude_keywords: config.excludeKeywords
+                        })
+                    });
+                    const data = await res.json();
+                    if (res.ok) {
+                        showToast(`Refreshed: +${data.added} new, -${data.deleted || 0} stale`);
+                        fetchJobs();
+                        fetchStats();
+                    } else {
+                        showToast(data.detail || 'Scraping failed', true);
+                    }
+                } catch (err) {
+                    showToast('Scraping failed - is the server running?', true);
+                } finally {
+                    setScraping(false);
+                }
+            };
+
+            const handleCheck = async (jobId, checked) => {
+                try {
+                    await fetch(`${API_BASE}/jobs/${jobId}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ checked: !checked })
+                    });
+                    setJobs(jobs.map(j => j.id === jobId ? { ...j, checked: !checked } : j));
+                    fetchStats();
+                } catch (err) {
+                    showToast('Update failed', true);
+                }
+            };
+
+            const handleStatusChange = async (jobId, status) => {
+                try {
+                    await fetch(`${API_BASE}/jobs/${jobId}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ status })
+                    });
+                    const appliedAt = status === 'applied' ? new Date().toISOString().split('T')[0] : null;
+                    setJobs(jobs.map(j => j.id === jobId ? { ...j, status, applied_at: status === 'applied' ? appliedAt : (status !== 'applied' ? null : j.applied_at) } : j));
+                    fetchStats();
+                } catch (err) {
+                    showToast('Update failed', true);
+                }
+            };
+
+            const handleDelete = async (jobId) => {
+                try {
+                    await fetch(`${API_BASE}/jobs/${jobId}`, { method: 'DELETE' });
+                    setJobs(jobs.filter(j => j.id !== jobId));
+                    fetchStats();
+                    showToast('Job removed');
+                } catch (err) {
+                    showToast('Delete failed', true);
+                }
+            };
+
+            const formatSalary = (min, max) => {
+                if (!min && !max) return null;
+                const fmt = (n) => n >= 1000 ? `$${(n/1000).toFixed(0)}k` : `$${n}`;
+                if (min && max) return `${fmt(min)} - ${fmt(max)}`;
+                if (min) return `${fmt(min)}+`;
+                return `Up to ${fmt(max)}`;
+            };
+
+            const formatDate = (dateStr) => {
+                if (!dateStr) return '—';
+                const date = new Date(dateStr);
+                const diffDays = Math.floor((new Date() - date) / (1000 * 60 * 60 * 24));
+                if (diffDays === 0) return 'Today';
+                if (diffDays === 1) return 'Yesterday';
+                if (diffDays < 7) return `${diffDays}d ago`;
+                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            };
+
+            const SortHeader = ({ column, label }) => {
+                const isActive = sortColumn === column;
+                const icon = isActive ? (sortDirection === 'asc' ? '↑' : '↓') : '↕';
+                return (
+                    <th className={`sortable ${isActive ? 'active' : ''}`} onClick={() => handleSort(column)}>
+                        {label}<span className="sort-icon">{icon}</span>
+                    </th>
+                );
+            };
+
+            return (
+                <div className="app">
+                    <header className="header">
+                        <h1><span>◆</span> Job Hunt Dashboard</h1>
+                        <div className="header-actions">
+                            <button className="btn" onClick={() => setSettingsOpen(!settingsOpen)}>⚙ Settings</button>
+                            <button className="btn btn-primary" onClick={handleScrape} disabled={scraping}>
+                                {scraping ? 'Scraping...' : '⟳ Scrape Jobs'}
+                            </button>
+                        </div>
+                    </header>
+
+                    <div className="settings-panel">
+                        <div className="settings-header" onClick={() => setSettingsOpen(!settingsOpen)}>
+                            <h3><span>⚙</span> Scraper Settings</h3>
+                            <span className={`toggle-icon ${settingsOpen ? 'open' : ''}`}>▼</span>
+                        </div>
+                        <div className={`settings-body ${settingsOpen ? 'open' : ''}`}>
+                            <div className="settings-grid">
+                                <div className="setting-group" style={{gridColumn: '1 / -1'}}>
+                                    <label>Search Query</label>
+                                    <textarea
+                                        value={config.searchQuery}
+                                        onChange={(e) => setConfig({...config, searchQuery: e.target.value})}
+                                        placeholder='e.g., "software engineer" OR "developer"'
+                                    />
+                                    <div className="setting-hint">Use OR for multiple terms, quotes for exact phrases</div>
+                                </div>
+                                
+                                <div className="setting-group">
+                                    <label>Location</label>
+                                    <input
+                                        type="text"
+                                        value={config.location}
+                                        onChange={(e) => setConfig({...config, location: e.target.value})}
+                                        placeholder="e.g., USA, Remote, New York"
+                                    />
+                                </div>
+                                
+                                <div className="setting-row">
+                                    <div className="setting-group">
+                                        <label>Results Wanted</label>
+                                        <input
+                                            type="number"
+                                            value={config.resultsWanted}
+                                            onChange={(e) => setConfig({...config, resultsWanted: e.target.value})}
+                                            min="10" max="500"
+                                        />
+                                    </div>
+                                    <div className="setting-group">
+                                        <label>Hours Old (max)</label>
+                                        <input
+                                            type="number"
+                                            value={config.hoursOld}
+                                            onChange={(e) => setConfig({...config, hoursOld: e.target.value})}
+                                            min="1" max="720"
+                                        />
+                                    </div>
+                                </div>
+                                
+                                <div className="setting-group" style={{gridColumn: '1 / -1'}}>
+                                    <label>Exclude Keywords (comma-separated)</label>
+                                    <input
+                                        type="text"
+                                        value={config.excludeKeywords}
+                                        onChange={(e) => setConfig({...config, excludeKeywords: e.target.value})}
+                                        placeholder="senior, lead, principal, staff"
+                                    />
+                                    <div className="setting-hint">Jobs with these words in the title will be filtered out</div>
+                                </div>
+                            </div>
+                            
+                            <div className="settings-actions">
+                                <button className="btn btn-primary" onClick={handleScrape} disabled={scraping}>
+                                    {scraping ? 'Scraping...' : '⟳ Run Scraper Now'}
+                                </button>
+                                <button className="btn" onClick={() => setConfig(DEFAULT_CONFIG)}>Reset to Defaults</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {stats && (
+                        <div className="stats-bar">
+                            <div className="stat-card">
+                                <div className="label">Total Jobs</div>
+                                <div className="value">{stats.total}</div>
+                            </div>
+                            <div className="stat-card secondary">
+                                <div className="label">Unchecked</div>
+                                <div className="value">{stats.unchecked}</div>
+                            </div>
+                            <div className="stat-card secondary">
+                                <div className="label">Applied</div>
+                                <div className="value">{stats.by_status?.applied || 0}</div>
+                            </div>
+                            <div className="stat-card secondary">
+                                <div className="label">Interviews</div>
+                                <div className="value">{stats.by_status?.interview || 0}</div>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="filters">
+                        <div className="search-box">
+                            <input
+                                type="text"
+                                placeholder="Search jobs, companies, locations..."
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                            />
+                        </div>
+                        <div className="filter-group">
+                            {['all', 'new', 'interested', 'applied', 'interview', 'rejected'].map(status => (
+                                <button
+                                    key={status}
+                                    className={`filter-btn ${statusFilter === status ? 'active' : ''}`}
+                                    onClick={() => setStatusFilter(status)}
+                                >
+                                    {status}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="table-container">
+                        {loading ? (
+                            <div className="loading">
+                                <div className="loading-spinner"></div>
+                                <div>Loading jobs...</div>
+                            </div>
+                        ) : sortedJobs.length === 0 ? (
+                            <div className="empty-state">
+                                <h3>No jobs found</h3>
+                                <p>Try adjusting your filters or scrape for new jobs</p>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="results-count">
+                                    Showing {sortedJobs.length} jobs · Sorted by {sortColumn.replace('_', ' ')} ({sortDirection === 'asc' ? 'ascending' : 'descending'})
+                                </div>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th className="checkbox-cell">✓</th>
+                                            <SortHeader column="title" label="Position" />
+                                            <SortHeader column="company" label="Company" />
+                                            <SortHeader column="location" label="Location" />
+                                            <SortHeader column="salary" label="Salary" />
+                                            <SortHeader column="date_posted" label="Posted" />
+                                            <SortHeader column="status" label="Status" />
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {sortedJobs.map(job => (
+                                            <tr key={job.id} className={job.checked ? 'checked' : ''}>
+                                                <td className="checkbox-cell">
+                                                    <div 
+                                                        className={`checkbox ${job.checked ? 'checked' : ''}`}
+                                                        onClick={() => handleCheck(job.id, job.checked)}
+                                                    />
+                                                </td>
+                                                <td>
+                                                    <div className="job-title">{job.title}</div>
+                                                    <div className="job-meta">
+                                                        {job.site && <span className={`tag site-${job.site.toLowerCase()}`}>{job.site}</span>}
+                                                        {job.is_remote && <span className="tag remote">Remote</span>}
+                                                        {job.job_type && <span className="tag">{job.job_type}</span>}
+                                                    </div>
+                                                </td>
+                                                <td><div className="job-company">{job.company || '—'}</div></td>
+                                                <td><div className="job-location">{job.location || '—'}</div></td>
+                                                <td><div className="salary">{formatSalary(job.salary_min, job.salary_max) || '—'}</div></td>
+                                                <td><div className="date">{formatDate(job.date_posted)}</div></td>
+                                                <td>
+                                                    <select
+                                                        className={`status-select status-${job.status}`}
+                                                        value={job.status}
+                                                        onChange={(e) => handleStatusChange(job.id, e.target.value)}
+                                                    >
+                                                        <option value="new">New</option>
+                                                        <option value="interested">Interested</option>
+                                                        <option value="applied">Applied</option>
+                                                        <option value="interview">Interview</option>
+                                                        <option value="rejected">Rejected</option>
+                                                    </select>
+                                                    {job.applied_at && (
+                                                        <div className="applied-date">Applied {formatDate(job.applied_at)}</div>
+                                                    )}
+                                                </td>
+                                                <td>
+                                                    <div className="actions">
+                                                        {job.job_url && (
+                                                            <a href={job.job_url} target="_blank" rel="noopener noreferrer" className="action-btn apply">
+                                                                Apply →
+                                                            </a>
+                                                        )}
+                                                        <button className="action-btn delete" onClick={() => handleDelete(job.id)}>✕</button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </>
+                        )}
+                    </div>
+
+                    {toast && <div className={`toast ${toast.isError ? 'error' : ''}`}>{toast.message}</div>}
+                </div>
+            );
+        }
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
