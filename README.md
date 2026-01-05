@@ -2,7 +2,6 @@
 
 A clean, minimal job search dashboard that scrapes jobs from LinkedIn, Indeed, Glassdoor, and ZipRecruiter. Track your applications with checkboxes and status updates.
 
-![Dashboard Preview](preview.png)
 
 ## Features
 
